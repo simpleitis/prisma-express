@@ -1,0 +1,4 @@
+npx prisma migrate dev
+npx prisma generate
+
+If you don't get auto suggestions for a table, then just click on the function you want to use like 'create' to open up its ts file

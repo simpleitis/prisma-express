@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id Int @id @default(autoincrement())
+  email String @unique 
+  name String @map("firstName")
+  // Using enums
+  role Role? @default(USER)
+  // one-to-one relationship, which is not required all the time
+  profile Profile? 
+  // one-to-many relationship 
+  posts   Post[] 
+  
+  @@map("users")
+   
+
+  @@unique([name, role])
+  @@index([id,email])
+} 
+
+model Profile {
+  id Int @id @default(autoincrement())
+  bio String
+  userId Int @unique
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Post {
+  id         Int        @id @default(autoincrement())
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  title      String
+  likeNum    Int        @default(0) 
+  published  Boolean    @default(false)
+  // When user gets deleted the posts related to the user also gets deleted
+  // There are other options like restrict, setNull etc for "onDelete"
+  // "SetDefault" is one the one which is not very descriptive from its name. This option set the authorId to a default value when the user who created this post is deleted
+  // When using "setNull" we have to set the "author" and "authorId" to be optional
+  // Similar options are available for "onUpdate" as well
+  author     User?      @relation(fields: [authorId], references: [id] , onDelete:Cascade )
+  authorId   Int? 
+  // many-to-many relationship between posts and categories. We have defined an implicit many-to-many relationship here, with the syntax used. We could define an explicit many-to-many relationship with a different syntax where we could define a custom JOIN/link/pivot table
+  catgories Category[] 
+}
+
+model Category{
+  id Int @id @default(autoincrement())
+  name String
+  posts Post[]
+}
+
+// model User{
+//   firstName String
+//   lastName String
+//   profile Profile?
+//   @@id([firstName,lastName])
+// }
+
+// model Profile {
+//   id Int @id 
+//   userFirstName String
+//   userLastName String
+//   user User @relation(fields: [userFirstName,userLastName] ,references: [firstName,lastName])
+
+//   @@unique([userFirstName,userLastName])
+// }
+
+enum Role {
+  USER 
+  ADMIN 
+  
+}
